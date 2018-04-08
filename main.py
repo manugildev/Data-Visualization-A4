@@ -1,4 +1,6 @@
 import pandas as pd
+from sklearn import preprocessing
+
 
 df = pd.read_csv("normal_info.csv", ',',  index_col=0)
 df = df.loc[df['filename'] == "mm/memory.c"]
@@ -15,6 +17,7 @@ authors = df['author_id'].unique()
 # Add empty column that will be filled with the author information
 df['author_total_additions'] = 0
 df['author_total_deletions'] = 0
+df['author_norm_additions'] = 0
 
 for author in authors:
 	df_author = df.loc[df['author_id'] == author, ]
@@ -23,5 +26,10 @@ for author in authors:
 	df.loc[df['author_id'] == author, 'author_total_additions'] = sum_of_author_additions
 	df.loc[df['author_id'] == author, 'author_total_deletions'] = sum_of_author_deletions
 
+df_author_additions = df['author_total_additions']
+df_norm = (1-0.1) * (df_author_additions-df_author_additions.min())/(df_author_additions.max()-df_author_additions.min()) + 0.1
+df['author_norm_additions'] = df_norm
+
+print(df_norm)
 df.to_csv("memory.csv")
 print(authors)
