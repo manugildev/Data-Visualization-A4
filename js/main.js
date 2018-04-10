@@ -12,15 +12,18 @@ var usersArcWidth = 20;
 var additions_radius = 100;
 var deletions_radius = 100;
 var total_lines = 0;
+var added_lines = 0;
+var removed_lines = 0;
 var lines_step = 0;
 var current_lines = 0;
+var current_authors = [];
 var current_total_lines = 0.0;
 var lines_arc;
 var authors = [];
 var years = [];
 var year_color_scale = d3.scaleOrdinal(d3.schemeCategory20);
 var element_duration = 200;
-var single_duration = 10;
+var single_duration = 50;
 var initial_animation_finished = false;
 
 function getRandomColor(t) {
@@ -72,6 +75,7 @@ function allData() {
                         years[w]['times'] += 1;
                         years[w]['_times'] += 1;
                         years[w]['authors'] += " author_" + data[i]["author_id"];
+                        years[w]['contributions'] += " contribution_" + data[i]["id"];
                         years[w]['written'] += parseInt(data[i].n_additions) + parseInt(data[i].n_deletions);
                         break;
                     }
@@ -84,6 +88,7 @@ function allData() {
                             '_times': 1,
                             'color': year_color_scale(years.length),
                             'authors': "author_" + data[i]["author_id"],
+                            'contributions': "contribution_" + data[i]["id"],
                             'written': 0,
                             'total': parseInt(data[i].total_additions) + parseInt(data[i].total_deletions)
                         });
@@ -93,6 +98,7 @@ function allData() {
                         '_times': 1,
                         'color': year_color_scale(years.length),
                         'authors': "author_" + data[i]["author_id"],
+                        'contributions': "contribution_" + data[i]["id"],
                         'written': 0,
                         'total': parseInt(data[i].total_additions) + parseInt(data[i].total_deletions)
                     });
@@ -110,8 +116,49 @@ function onLoad(data) {
     total_lines = data[0].total_additions - data[0].total_deletions;
     step = (Math.PI * 2) / dataSize;
     lines_step = (Math.PI * 2) / total_lines;
+    total_lines = 0;
     drawChart();
 
+}
+
+function contributionOver(d) {
+    if (!initial_animation_finished) return;
+    svg.selectAll(".arc-path").attr('stroke-width', 0)
+        .transition().duration(200).attr("fill-opacity", 0.2).attr("stroke-opacity", 0);
+    svg.selectAll(".years-path").attr('stroke-width', 0)
+        .transition().duration(200).attr("fill-opacity", 0.2).attr("stroke-opacity", 0);
+    svg.selectAll(".contribution_" + d.id).attr('stroke-width', 1)
+        .transition().duration(200).attr("fill-opacity", 1).attr("stroke-opacity", 1);
+
+
+    svg.select('text').text("Commit #" + d.id);
+    svg.select('.lines_added').text("+ " + d.n_additions);
+    svg.select('.lines_removed').text("- " + d.n_deletions);
+    svg.select('.info_text1').text("+ (Lines Added)");
+    svg.select('.info_text2').text("- (Lines Removed)");
+
+
+    svg.select('text').transition().duration(200).attr("fill-opacity", 1);
+    svg.select('.lines_added').transition().duration(200).attr("fill-opacity", 1);
+    svg.select('.lines_removed').transition().duration(200).attr("fill-opacity", 1);
+    svg.select('.info_text1').transition().duration(200).attr("fill-opacity", 1);
+    svg.select('.info_text2').transition().duration(200).attr("fill-opacity", 1);
+    //d3.select('svg').select(".labels_additions").transition().delay(100).duration(200).style("opacity", 1);
+}
+
+function contributionOut(d) {
+    if (!initial_animation_finished) return;
+
+    svg.selectAll(".arc-path")
+        .transition().duration(200).attr("fill-opacity", 1).attr("stroke-opacity", 1);
+    svg.selectAll(".years-path")
+        .transition().duration(200).attr("fill-opacity", 1).attr("stroke-opacity", 1);
+    svg.select('text').transition().duration(200).attr("fill-opacity", 0);
+    svg.select('.lines_added').transition().duration(200).attr("fill-opacity", 0);
+    svg.select('.lines_removed').transition().duration(200).attr("fill-opacity", 0);
+    svg.select('.info_text1').transition().duration(200).attr("fill-opacity", 0);
+    svg.select('.info_text2').transition().duration(200).attr("fill-opacity", 0);
+    //d3.select('svg').select(".labels_additions").transition().delay(100).duration(200).style("opacity", 0);
 }
 
 function setTextOnMouseOver(d) {
@@ -143,6 +190,7 @@ function setTextOnMouseOver(d) {
     svg.select('.info_text1').transition().duration(200).attr("fill-opacity", 1);
     svg.select('.info_text2').transition().duration(200).attr("fill-opacity", 1);
     svg.select('.info_text3').transition().duration(200).attr("fill-opacity", 1);
+    //d3.select('svg').select(".labels_users").transition().delay(100).duration(200).style("opacity", 1);
 }
 
 function setTextOnMouseOut(d) {
@@ -160,6 +208,7 @@ function setTextOnMouseOut(d) {
     svg.select('.info_text1').transition().duration(200).attr("fill-opacity", 0);
     svg.select('.info_text2').transition().duration(200).attr("fill-opacity", 0);
     svg.select('.info_text3').transition().duration(200).attr("fill-opacity", 0);
+    //d3.select('svg').select(".labels_users").transition().delay(100).duration(200).style("opacity", 0);
 
 }
 
@@ -185,6 +234,7 @@ function yearMouseOver(d) {
     svg.select('.info_text1').transition().duration(200).attr("fill-opacity", 1);
     svg.select('.info_text2').transition().duration(200).attr("fill-opacity", 1);
     svg.select('.info_text3').transition().duration(200).attr("fill-opacity", 0);
+    //d3.select('svg').select(".labels_years").style("opacity", 0).transition().delay(100).duration(200).style("opacity", 1);
 }
 
 function yearMouseOut(d) {
@@ -200,6 +250,7 @@ function yearMouseOut(d) {
     svg.select('.info_text1').transition().duration(200).attr("fill-opacity", 0);
     svg.select('.info_text2').transition().duration(200).attr("fill-opacity", 0);
     svg.select('.info_text3').transition().duration(200).attr("fill-opacity", 0);
+    //d3.select('svg').select(".labels_years").transition().delay(100).duration(200).style("opacity", 0);
 }
 
 
@@ -214,16 +265,40 @@ function myCallback(d) {
     svg.select('text').text(day + "/" + month + "/" + year);
     current_lines += parseInt(d.n_additions);
     current_total_lines += parseFloat(d.n_additions) + parseFloat(d.n_deletions);
+
     if (current_lines === parseInt(d.total_additions)) {
         initial_animation_finished = true;
         svg.select('text').transition().duration(700).attr("fill-opacity", 0);
         svg.select('.percent_text').transition().duration(700).attr("fill-opacity", 0);
         svg.select('.info_text1').transition().duration(700).attr("fill-opacity", 0);
         svg.select('.info_text2').transition().duration(700).attr("fill-opacity", 0);
+
+        d3.select('svg').select(".labels_users").transition().delay(3000).duration(1000).style("opacity", 0);
+        d3.select('svg').select(".labels_years").transition().delay(3000).duration(1000).style("opacity", 0);
+        d3.select('svg').select(".labels_additions").transition().delay(3000).duration(1000).style("opacity", 0);
     }
 
     var text = current_total_lines / (parseFloat(d.total_additions) + parseFloat(d.total_deletions)) * 100;
     svg.select('.percent_text').text(parseInt(text) + "%");
+
+    added_lines += parseInt(d.n_additions);
+    removed_lines += parseInt(d.n_deletions);
+    total_lines += (parseInt(d.n_additions) - parseInt(d.n_deletions));
+
+    d3.select('svg').select('.added_lines').text("Added Lines: " + added_lines);
+    d3.select('svg').select('.removed_lines').text("Removed Lines: " + removed_lines);
+    d3.select('svg').select('.total_lines').text("Total Lines: " + (total_lines));
+
+    var exists = false;
+    for (var i = 0; i < current_authors.length; i++) {
+        if (current_authors[i] === d.author_id) {
+            exists = true;
+        }
+    }
+    if (!exists) current_authors.push(d.author_id);
+
+    d3.select('svg').select('.total_contributors').text("Total Contributors: " + (current_authors.length));
+
 }
 
 function drawChart() {
@@ -231,14 +306,14 @@ function drawChart() {
 
     g.append('svg:path')
         .attr('class', function (d, i) {
-            return 'arc-path author_' + d.author_id + ' year_' + d.year;
+            return 'arc-path author_' + d.author_id + ' year_' + d.year + ' contribution_' + d.id;
         })
         .attr('fill', '#139639')
         .on("mouseover", function (d) {
-            setTextOnMouseOver(d);
+            contributionOver(d);
         })
         .on("mouseout", function (d) {
-            setTextOnMouseOut(d);
+            contributionOut(d);
         })
         .transition()
         .delay(function (d, i) {
@@ -251,14 +326,14 @@ function drawChart() {
 
     g.append('svg:path')
         .attr('class', function (d, i) {
-            return 'arc-path author_' + d.author_id + ' year_' + d.year;
+            return 'arc-path author_' + d.author_id + ' year_' + d.year + ' contribution_' + d.id;
         })
         .attr('fill', '#e2120c')
         .on("mouseover", function (d) {
-            setTextOnMouseOver(d);
+            contributionOver(d);
         })
         .on("mouseout", function (d) {
-            setTextOnMouseOut(d);
+            contributionOut(d);
         })
         .transition()
         .delay(function (d, i) {
@@ -277,7 +352,7 @@ function drawChart() {
             setTextOnMouseOut(d);
         })
         .attr('class', function (d, i) {
-            return 'arc-path contributions-path author_' + d.author_id + ' year_' + d.year;
+            return 'arc-path contributions-path author_' + d.author_id + ' year_' + d.year + ' contribution_' + d.id;
         })
         .attr('fill', function (d) {
             return d.color;
@@ -313,7 +388,7 @@ function drawChart() {
         .on('mouseover', yearMouseOver)
         .on('mouseout', yearMouseOut)
         .attr('class', function (d, i) {
-            return 'years-path year_' + d.year + " " + d.authors;
+            return 'years-path year_' + d.year + " " + d.authors + " " + d.contributions;
         })
         .attr('fill', function (d) {
             return d['color'];
@@ -352,6 +427,28 @@ function drawChart() {
         .attr("fill-opacity", 0).transition().delay(100).duration(1000)
         .attr("fill-opacity", 1)
         .text("99%");
+
+    svg.append("text")
+        .attr("class", "lines_added")
+        .attr("text-anchor", "middle")
+        .attr('font-size', '2em')
+        .style("font-weight", 'bold')
+        .style('fill', '#139639')
+        .attr('y', 5)
+        .attr('x', -40)
+        .attr("fill-opacity", 0)
+        .text("-1023");
+
+    svg.append("text")
+        .attr("class", "lines_removed")
+        .attr("text-anchor", "middle")
+        .attr('font-size', '2em')
+        .style("font-weight", 'bold')
+        .style('fill', '#e2120c')
+        .attr('y', 5)
+        .attr('x', 40)
+        .attr("fill-opacity", 0)
+        .text("+1932");
 
     svg.append("text")
         .attr("class", "info_text1")
@@ -393,12 +490,12 @@ function drawChart() {
 
     gradient.append("stop")
         .attr("offset", "0%")
-        .attr("stop-color",getRandomColor(1-1/130))
+        .attr("stop-color", getRandomColor(1 - 1 / 130))
         .attr("stop-opacity", 1);
 
     gradient.append("stop")
         .attr("offset", "100%")
-        .attr("stop-color",   getRandomColor(1-87/130))
+        .attr("stop-color", getRandomColor(1 - 87 / 130))
         .attr("stop-opacity", 1);
 
     var signs = d3.select('svg').append("g").attr("class", "signs");
@@ -474,11 +571,11 @@ function drawChart() {
         .attr('x', 50)
         .text("Removed Lines.");
 
-    for(var i = 0; i<years.length; i++){
+    for (var i = 0; i < years.length; i++) {
         var year = signs
             .append("rect")
             .attr("x", 20)
-            .attr("y", 220 + (20*i))
+            .attr("y", 220 + (20 * i))
             .attr("width", 20)
             .attr("height", 20)
             .style("fill", years[i].color);
@@ -487,12 +584,166 @@ function drawChart() {
             .attr('font-size', '0.6em')
             .style("font-weight", 'bold')
             .style('fill', '#34495e')
-            .attr('y', 233 + (20*i))
+            .attr('y', 233 + (20 * i))
             .attr('x', 45)
             .text(years[i].year);
 
     }
-    signs.    attr("fill-opacity", 0).transition().duration(500).attr("fill-opacity", 1);
+    signs.attr("fill-opacity", 0).transition().duration(500).attr("fill-opacity", 1);
+
+
+    var file_info = d3.select('svg').append("g").attr("class", "file_info");
+
+    file_info.append("text")
+        .attr("class", "added_lines")
+        .attr("text-anchor", "left")
+        .attr('font-size', '1.2em')
+        .style("font-weight", 'bold')
+        .style('fill', '#139639')
+        .attr('y', window.height - 200)
+        .attr('x', 20)
+        .text("Added Lines: ");
+
+    file_info.append("text")
+        .attr("class", "removed_lines")
+        .attr("text-anchor", "left")
+        .attr('font-size', '1.2em')
+        .style("font-weight", 'bold')
+        .style('fill', '#e2120c')
+        .attr('y', window.height - 170)
+        .attr('x', 20)
+        .text("Removed Lines: ");
+
+    file_info.append("text")
+        .attr("class", "total_lines")
+        .attr("text-anchor", "left")
+        .attr('font-size', '1.2em')
+        .style("font-weight", 'bold')
+        .style('fill', '#34495e')
+        .attr('y', window.height - 140)
+        .attr('x', 20)
+        .text("Total Lines: ");
+
+    file_info.append("text")
+        .attr("class", "total_contributors")
+        .attr("text-anchor", "left")
+        .attr('font-size', '1.2em')
+        .style("font-weight", 'bold')
+        .style('fill', '#34495e')
+        .attr('y', window.height - 110)
+        .attr('x', 20)
+        .text("Total Contributors: ");
+
+    file_info.attr("fill-opacity", 0).transition().duration(500).attr("fill-opacity", 1);
+
+    var labels = d3.select('svg').append("g").attr("class", "labels");
+
+    var label_additions = labels.append("g").attr("class", "labels_additions");
+
+    label_additions.append("text")
+        .attr("text-anchor", "left")
+        .attr('font-size', '0.8em')
+        .style("font-weight", 'bold')
+        .style('fill', '#34495e')
+        .attr('y', window.height / 2 + 150)
+        .attr('x', window.width / 2 + 300)
+        .text("Line Additions and Deletions");
+
+    //Draw the line
+    var line1 = label_additions.append("line")
+        .attr("x1", window.width / 2 + 470)
+        .attr("y1", window.height / 2 + 160)
+        .attr("x2", window.width / 2 + 300)
+        .attr("y2", window.height / 2 + 160)
+        .attr("stroke-width", 2)
+        .attr("stroke", '#34495e');
+
+    var line2 = label_additions.append("line")
+        .attr("x1", window.width / 2 + 300)
+        .attr("y1", window.height / 2 + 160)
+        .attr("x2", window.width / 2 + 240)
+        .attr("y2", window.height / 2 + 90)
+        .attr("stroke-width", 2)
+        .attr("stroke", '#34495e');
+
+    var circle = label_additions.append("circle")
+        .attr("cx", window.width / 2 + 240)
+        .attr("cy", window.height / 2 + 90)
+        .attr("r", 2)
+        .attr("fill", '#34495e');
+
+
+    var label_users = labels.append("g").attr("class", "labels_users");
+    //Draw Line 2
+    label_users.append("text")
+        .attr("text-anchor", "left")
+        .attr('font-size', '0.8em')
+        .style("font-weight", 'bold')
+        .style('fill', '#34495e')
+        .attr('y', window.height / 2)
+        .attr('x', window.width / 2 + 300)
+        .text("Users");
+
+    var line3 = label_users.append("line")
+        .attr("x1", window.width / 2 + 340)
+        .attr("y1", window.height / 2 + 10)
+        .attr("x2", window.width / 2 + 300)
+        .attr("y2", window.height / 2 + 10)
+        .attr("stroke-width", 2)
+        .attr("stroke", '#34495e');
+
+    var line4 = label_users.append("line")
+        .attr("x1", window.width / 2 + 300)
+        .attr("y1", window.height / 2 + 10)
+        .attr("x2", window.width / 2 + 150)
+        .attr("y2", window.height / 2 - 20)
+        .attr("stroke-width", 2)
+        .attr("stroke", '#34495e');
+
+    var circle1 = label_users.append("circle")
+        .attr("cx", window.width / 2 + 150)
+        .attr("cy", window.height / 2 - 20)
+        .attr("r", 2)
+        .attr("fill", '#34495e');
+
+
+    var label_years = labels.append("g").attr("class", "labels_years");
+    label_years.append("text")
+        .attr("text-anchor", "left")
+        .attr('font-size', '0.8em')
+        .style("font-weight", 'bold')
+        .style('fill', '#34495e')
+        .attr('y', window.height / 2 - 150)
+        .attr('x', window.width / 2 + 300)
+        .text("Years");
+
+
+    var line5 = label_years.append("line")
+        .attr("x1", window.width / 2 + 340)
+        .attr("y1", window.height / 2  - 140)
+        .attr("x2", window.width / 2 + 300)
+        .attr("y2", window.height / 2 - 140)
+        .attr("stroke-width", 2)
+        .attr("stroke", '#34495e');
+
+    var line6 = label_years.append("line")
+        .attr("x1", window.width / 2 + 300)
+        .attr("y1", window.height / 2  - 140)
+        .attr("x2", window.width / 2 + 100)
+        .attr("y2", window.height / 2 - 80)
+        .attr("stroke-width", 2)
+        .attr("stroke", '#34495e');
+
+    var circle3 = label_years.append("circle")
+        .attr("class", "labels_years")
+        .attr("cx", window.width / 2 + 100)
+        .attr("cy", window.height / 2 - 80)
+        .attr("r", 2)
+        .attr("fill", '#34495e');
+
+    d3.select('svg').select(".labels_users").style("opacity", 0).transition().delay(element_duration * 35).duration(1000).style("opacity",1);
+    d3.select('svg').select(".labels_years").style("opacity", 0).transition().delay(element_duration * 35).duration(1000).style("opacity", 1);
+    d3.select('svg').select(".labels_additions").style("opacity", 0).transition().delay(element_duration * 35).duration(1000).style("opacity", 1);
 
 
 }
