@@ -71,7 +71,6 @@ function allData() {
                 for (var w = 0; w < years.length; w++) {
                     if (years[w]['year'] === year) {
                         exits = true;
-                        console.log(year + " exists");
                         years[w]['times'] += 1;
                         years[w]['_times'] += 1;
                         years[w]['authors'] += " author_" + data[i]["author_id"];
@@ -177,7 +176,6 @@ function setTextOnMouseOver(d) {
     percent = Math.round(percent * 100) / 100;
 
     var contributions = svg.selectAll(".author_" + d.author_id).filter(".contributions-path");
-    console.log(contributions._groups[0].length);
 
     svg.select('text').text("Author #" + d.author_id);
     svg.select('.percent_text').text(percent + "%");
@@ -695,14 +693,14 @@ function drawChart() {
     var line4 = label_users.append("line")
         .attr("x1", window.width / 2 + 300)
         .attr("y1", window.height / 2 + 10)
-        .attr("x2", window.width / 2 + 150)
-        .attr("y2", window.height / 2 - 20)
+        .attr("x2", window.width / 2 + window.width/12.8)
+        .attr("y2", window.height / 2 - window.height/47)
         .attr("stroke-width", 2)
         .attr("stroke", '#34495e');
 
     var circle1 = label_users.append("circle")
-        .attr("cx", window.width / 2 + 150)
-        .attr("cy", window.height / 2 - 20)
+        .attr("cx", window.width / 2 +  window.width/12.8)
+        .attr("cy", window.height / 2 -  window.height/47)
         .attr("r", 2)
         .attr("fill", '#34495e');
 

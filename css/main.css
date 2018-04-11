@@ -101,7 +101,11 @@ body {
     font-family: 'Roboto', sans-serif;
 }
 
-
+.center {
+    margin: auto;
+    width: 100%;
+    text-align: center;
+}
 
 
 
